@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<title>Bullet Clock Flea Test</title>
+
+<style type="text/css">
+	* {
+		vertical-align: top;
+		font-family: sans-serif;
+		font-size: 14px;
+	}
+	div {
+		height: 50px;
+		border:1px solid white;
+		background:#f5f5f0;
+		line-height: 50px;
+	}
+	div > * {
+		line-height: 25px;
+		display: inline-block;
+		vertical-align: middle;
+	}
+	 label {
+		width:150px;
+	}
+	.status {
+
+	}
+	span {
+
+		display: inline-block;
+	}
+</style>
+
+<div>
+	<input type="checkbox" checked id="enable_best"/>
+	<label for="enable_best">Current time<br/>(best source): </label>
+	<span id="time_best">unknown</span>
+	<span class="status" id="status_best">unknown</span>
+	<button id="send_best">Send Time</button>
+</div>
+<div>
+	<input type="checkbox" checked id="enable_websocket"/>
+	<label for="enable_websocket">Current time<br/>(websocket only): </label>
+	<span id="time_websocket">unknown</span>
+	<span class="status" id="status_websocket">unknown</span>
+	<button id="send_websocket">Send Time</button>
+</div>
+<div>
+	<input type="checkbox" checked id="enable_eventsource"/>
+	<label for="enable_eventsource">Current time<br/>(eventsource only): </label>
+	<span id="time_eventsource">unknown</span>
+	<span class="status" id="status_eventsource">unknown</span>
+	<button id="send_eventsource">Send Time</button>
+</div>
+<div>
+	<input type="checkbox" checked id="enable_polling"/>
+	<label for="enable_polling">Current time<br/>(polling only): </label>
+	<span id="time_polling">unknown</span>
+	<span class="status" id="status_polling">unknown</span>
+	<button id="send_polling">Send Time</button>
+</div>
+
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="js/bullet.js"></script>
+<script type="text/javascript">
+// <![CDATA[
+$(document).ready(function(){
+
+	var __id = 0;
+	var gid = function() {
+		return ++__id;
+	}
+
+	var start = function(name, options) {
+		var bullet;
+		var open = function(){
+			bullet = $.bullet('ws://localhost:8000/flea/'+gid(), options);
+			bullet.onopen = function(){
+				$('#status_' + name).text('online').css('background','green');
+			};
+			bullet.onclose = bullet.ondisconnect = function(){
+				$('#status_' + name).text('offline').css('background','red');
+			};
+			bullet.onmessage = function(e){
+				// console.log('message',e);
+				if (e.data != 'pong'){
+					$('#time_' + name).text(e.data);
+				}
+			};
+			bullet.onheartbeat = function(){
+				// console.log('ping: ' + name);
+				bullet.send('ping: ' + name);
+			};
+		}
+		$('#enable_' + name).on('change', function(){
+			if (this.checked){
+				open();
+			} else{
+				if (bullet) bullet.close();
+				bullet = null;
+			}
+		});
+		$('#send_' + name).on('click', function(){
+			if (bullet) {
+				bullet.send('time: ' + name + ' '
+					+ $('#time_' + name).text());
+			}
+		});
+		$('#enable_' + name).trigger('change');
+	};
+
+	start('best', {});
+	start('websocket', {'disableEventSource': true,
+		'disableXHRPolling': true});
+	start('eventsource', {'disableWebSocket': true,
+		'disableXHRPolling': true});
+	start('polling', {'disableWebSocket': true,
+		'disableEventSource': true});
+});
+// ]]>
+</script>

@@ -1,0 +1,5 @@
+{application, flea,
+ [
+  {description, ""},
+  {vsn, "1"}
+ ]}.

@@ -1,0 +1,7 @@
+{application, clock,
+ [
+  {description, ""},
+  {vsn, "1"},
+
+  {mod,{clock,[]}}
+ ]}.
