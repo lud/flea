@@ -50,7 +50,7 @@ init(Arg,_,Active) ->
 info(refresh,State) ->
 	TRef = erlang:send_after(?PERIOD, self(), refresh),
 	DateTime = httpd_util:rfc1123_date(erlang:localtime()),
-	io:format("clock refresh timeout: ~s~n", [DateTime]),
+	% io:format("clock refresh timeout: ~s~n", [DateTime]),
 	{reply, DateTime, TRef};
 
 info(Message,State)  ->

@@ -8,28 +8,32 @@
 	<label for="enable_best">Best source</label>
 	<span class="time">unknown</span>
 	<span class="connection-status">unknown</span>
-	<button>Send Time</button>
+	<input type="text" value="Hello from best"/>
+	<button>Send Message</button>
 </div>
 <div id="display-websocket">
 	<input id="enable_websocket" type="checkbox" checked />
 	<label for="enable_websocket">Websocket only</label>
 	<span class="time">unknown</span>
 	<span class="connection-status">unknown</span>
-	<button>Send Time</button>
+	<input type="text" value="Hello from websocket"/>
+	<button>Send Message</button>
 </div>
 <div id="display-eventsource">
 	<input id="enable_eventsource" type="checkbox" checked />
 	<label for="enable_eventsource">Eventsource only</label>
 	<span class="time">unknown</span>
 	<span class="connection-status">unknown</span>
-	<button>Send Time</button>
+	<input type="text" value="Hello from eventsource"/>
+	<button>Send Message</button>
 </div>
 <div id="display-polling">
 	<input id="enable_polling" type="checkbox" checked />
 	<label for="enable_polling">Polling only</label>
 	<span class="time">unknown</span>
 	<span class="connection-status">unknown</span>
-	<button>Send Time</button>
+	<input type="text" value="Hello from polling"/>
+	<button>Send Message</button>
 </div>
 
 
@@ -39,15 +43,10 @@
 // <![CDATA[
 $(document).ready(function(){
 
-	var __id = 0;
-	var gid = function() {
-		return ++__id;
-	}
-
 	var start = function(name, options) {
 		var bullet, div = $('#display-'+name);
 		var open = function(){
-			bullet = $.bullet('ws://localhost:8000/flea/'+gid(), options);
+			bullet = $.bullet('ws://localhost:8000/flea/'+name, options);
 			bullet.onopen = function(){
 				div.find('.connection-status').text('Online').css('background','green');
 			};
@@ -65,7 +64,7 @@ $(document).ready(function(){
 				bullet.send('ping: ' + name);
 			};
 		}
-		div.find('input').on('change', function(){
+		div.find('input[type="checkbox"]').on('change', function(){
 			if (this.checked){
 				open();
 			} else{
@@ -75,8 +74,7 @@ $(document).ready(function(){
 		});
 		div.find('button').on('click', function(){
 			if (bullet) {
-				bullet.send('time: ' + name + ' '
-					+ div.find('.time').text());
+				bullet.send(div.find('input[type="text"]').prop('value'));
 			}
 		});
 		$('#enable_' + name).trigger('change');
@@ -129,8 +127,10 @@ $(document).ready(function(){
 		-webkit-border-radius: 3px;
 		color:white;
 	}
+	input[type="text"] {
+		padding:0 4px;
+	}
 	span {
-
 		display: inline-block;
 	}
 </style>

@@ -71,11 +71,10 @@ handle_req(Arg,'POST',Opts) ->
 	%% (eventsource or polling may be running in parrallel to handle
 	%% push messages with Handler:info/)
 	{ok, HSt} = Handler:init(Arg,Opts,Active=false), %% @todo handle {error, Reason} | close / check if Yaws sends 500 errors
-	io:format("STREAM SENT\n"),
 	{Reply,NewHandlerState} =
 		case Handler:stream(Data,HSt)
-			of {reply,R,NewHSt}	-> io:format("STREAM REPLY = ~p\n",[R]),{{html,R} ,NewHSt} %% todo check content, default to JSON
-			 ; {ok,NewHSt}     	-> io:format("STREAM NOREPLY !! = \n"),{ok,NewHSt}
+			of {reply,R,NewHSt}	-> {{html,R} ,NewHSt} %% todo check content, default to JSON
+			 ; {ok,NewHSt}     	-> {ok,NewHSt}
 		end,
 
 	Handler:terminate(NewHandlerState),
