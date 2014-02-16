@@ -3,22 +3,32 @@
 <meta charset="utf-8">
 <title>Flea Chat Example</title>
 
-<input id="nickname" value="Anonym"/>
+<div id="chat-box">
+	<div id="connection-status">Offline</div>
+</div>
 <input id="send-msg" placeholder="Chat Here !"/>
-<span id="connection-status"></span>
-<div id="chat-box"></div>
+
 
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 <script src="js/bullet.js"></script>
 <script type="text/javascript">
 // <![CDATA[
 $(document).ready(function(){
-	var name = prompt("What's your name ?","Some dude");
-	$('#nickname').val(name);
+	var nickname = (function getnick(){
+		var n = prompt("What's your name ?","Some dude");
+		if (n === null) return getnick();
+		else if (n === undefined) return getnick();
+		else if (n === '') return getnick();
+		else return n;
+	}());
 	var box = $('#chat-box'),
 		input = $('#send-msg'),
 		userid = makeid(10);
-	bullet = $.bullet('ws://localhost:8000/flea/'+userid);
+	var eventsource_only = {'disableWebSocket': true,'disableXHRPolling': true}
+	var ws_only = {'disableXHRPolling': true,'disableEventSource': true}
+	var polling_only = {'disableWebSocket': true,'disableEventSource': true}
+	var best_source = {};
+	bullet = $.bullet('ws://localhost:8000/flea/'+nickname+'/'+userid, best_source);
 	bullet.onopen = function(){
 		$('#connection-status').text('Online').css('background','green');
 	};
@@ -27,8 +37,9 @@ $(document).ready(function(){
 	};
 	bullet.onmessage = function(e){
 		// console.log('message',e);
-		var newHTML = (''+e.data).replace( /[<>]/g, '' ) + '<br/>' + box.html();
-		box.html(newHTML);
+		var chatline = (''+e.data).replace( /[<>]/g, '' );
+		box.append($('<p/>').text(chatline));
+		box.animate({ scrollTop: box.prop('scrollHeight') });
 	};
 	bullet.onheartbeat = function(){
 		console.log('ping');
@@ -36,19 +47,10 @@ $(document).ready(function(){
 	};
 	input.on('keyup',function (e) {
 	    if ((e.keyCode || e.charCode) === 13) {
-	    	bullet.send($('#nickname').val() + '&gt; '+input.val());
+	    	bullet.send(input.val());
 	    	input.val('');
 	    }
 	});
-	function startloop() {
-		setTimeout(function(){
-			var sent = bullet.send($('#nickname').val() + ' has joined.');
-			console.log('start sent',sent);
-			// if ( ! ) startloop();
-		},500);
-	}
-	startloop();
-
 });
 
 function makeid(len) {
@@ -67,6 +69,24 @@ function makeid(len) {
 <style type="text/css">
 	#chat-box {
 		font-family: monospace;
+		overflow: auto;
+		height: 200px;
+		width: 400px;
+		border:1px solid #bbb;
+		margin-bottom: 5px;
+		padding:5px;
+	}
+	#connection-status {
+		padding:3px;
+		color:white;
+		border-radius: 4px;
+		-moz-border-radius: 4px;
+		-webkit-border-radius: 4px;
+		background:red;
+		float:right;
+	}
+	#send-msg {
+		width: 400px;
 	}
 
 </style>

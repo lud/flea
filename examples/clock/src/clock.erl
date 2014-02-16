@@ -43,7 +43,7 @@ out(A) ->
 %%% -----------------------------------------------------------------
 
 init(Arg,_,Active) ->
-	io:format("/~s init, active=~p in ~p~n",[yaws_api:arg_appmoddata(Arg),Active,self()]),
+	io:format("/~s init, active=~p in ~p~n",[yaws_api:arg_pathinfo(Arg),Active,self()]),
 	TRef = erlang:send_after(?PERIOD, self(), refresh),
 	{ok, TRef}.
 
