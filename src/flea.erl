@@ -71,28 +71,30 @@ handle_req(Arg,'POST',Opts) ->
 	%% (eventsource or polling may be running in parrallel to handle
 	%% push messages with Handler:info/)
 	{ok, HSt} = Handler:init(Arg,Opts,Active=false), %% @todo handle {error, Reason} | close / check if Yaws sends 500 errors
+	io:format("STREAM SENT\n"),
 	{Reply,NewHandlerState} =
-		case Handler:stream(Data,Arg,HSt)
-			of {reply,R,NewHSt}	-> {{html,R} ,NewHSt} %% todo check content, default to JSON
-			 ; {ok,NewHSt}     	-> {ok,NewHSt}
+		case Handler:stream(Data,HSt)
+			of {reply,R,NewHSt}	-> io:format("STREAM REPLY = ~p\n",[R]),{{html,R} ,NewHSt} %% todo check content, default to JSON
+			 ; {ok,NewHSt}     	-> io:format("STREAM NOREPLY !! = \n"),{ok,NewHSt}
 		end,
-	Handler:terminate(Arg,NewHandlerState),
+
+	Handler:terminate(NewHandlerState),
 	Reply.
 
 %% This function is the long-polling handler. It waits for a message
 %% until POLL_TIMEOUT
 poll(Arg,State=#state{handler_state=HSt,handler=Handler}) ->
 	receive Message ->
-		case Handler:info(Message,Arg,HSt)
+		case Handler:info(Message,HSt)
 			of {reply,Reply,NewHSt} ->
-					Handler:terminate(Arg,NewHSt),
+					Handler:terminate(NewHSt),
 					{html,Reply} %% todo check content-types and default to JSON
 			 ; {ok,NewHSt} ->
 				poll(Arg,State=#state{handler_state=NewHSt,handler=Handler})
 		end
 	after
 		?POLL_TIMEOUT ->
-			Handler:terminate(Arg,HSt),
+			Handler:terminate(HSt),
 			ok
 	end.
 
@@ -112,7 +114,7 @@ handle_message(Message) ->
 	nomod:fail().
 
 handle_message({_Text_or_Bin,Message},State=#state{handler=Handler,handler_state=HSt}) ->
-	case Handler:stream(Message,arg,HSt)
+	case Handler:stream(Message,HSt)
 		of {reply,R,NewHSt}	-> websocket_rep_state(R,NewHSt,State)
 		 ; {ok,NewHSt}     	-> {noreply,State#state{handler_state=NewHSt}}
 	end.
@@ -121,7 +123,7 @@ handle_info(timeout,State) ->
 	{close,timeout,State};
 
 handle_info(Info,State=#state{handler=Handler,handler_state=HSt}) ->
-	case Handler:info(Info,arg,HSt)
+	case Handler:info(Info,HSt)
 		of {reply,R,NewHSt}	-> websocket_rep_state(R,NewHSt,State)
 		 ; {ok,NewHSt}     	-> {noreply,State#state{handler_state=NewHSt}}
 	end.
@@ -131,7 +133,7 @@ websocket_rep_state(Reply,NewHSt,State) ->
 	{reply,{text,R},State#state{handler_state=NewHSt}}.
 
 terminate(_Reason,#state{handler=Handler,handler_state=HSt}) ->
-	Handler:terminate(arg,HSt),
+	Handler:terminate(HSt),
 	ok.
 
 lkup(K,L) ->

@@ -30,7 +30,7 @@ handle_info({tcp_closed, _}, State) ->
 	{stop, normal, State#state{sock=closed}};
 
 handle_info(Message, #state{sock=Socket,arg=Arg,handler=Handler,handler_state=HSt}=State) ->
-	case Handler:info(Message,Arg,HSt)
+	case Handler:info(Message,HSt)
 		of {reply,Data,NewHSt} ->
 			case yaws_sse:send_events(Socket, yaws_sse:data(Data))
 				of ok ->             	{noreply, State#state{handler_state=NewHSt}}
@@ -42,7 +42,7 @@ handle_info(Message, #state{sock=Socket,arg=Arg,handler=Handler,handler_state=HS
 	end.
 
 terminate(_Reason, #state{sock=Socket,yaws_pid=YawsPid,arg=Arg,handler=Handler,handler_state=HSt}) ->
-	Handler:terminate(Arg,HSt),
+	Handler:terminate(HSt),
 	yaws_api:stream_process_end(Socket, YawsPid),
 	ok.
 
