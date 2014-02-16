@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<title>Flea Chat Example</title>
+
+<input id="nickname" value="Anonym"/>
+<input id="send-msg" placeholder="Chat Here !"/>
+<span id="connection-status"></span>
+<div id="chat-box"></div>
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="js/bullet.js"></script>
+<script type="text/javascript">
+// <![CDATA[
+$(document).ready(function(){
+	var name = prompt("What's your name ?","Some dude");
+	$('#nickname').val(name);
+	var box = $('#chat-box'),
+		input = $('#send-msg'),
+		userid = makeid(10);
+	bullet = $.bullet('ws://localhost:8000/flea/'+userid);
+	bullet.onopen = function(){
+		$('#connection-status').text('Online').css('background','green');
+	};
+	bullet.onclose = bullet.ondisconnect = function(){
+		$('#connection-status').text('Offline').css('background','red');
+	};
+	bullet.onmessage = function(e){
+		// console.log('message',e);
+		var newHTML = (''+e.data).replace( /[<>]/g, '' ) + '<br/>' + box.html();
+		box.html(newHTML);
+	};
+	bullet.onheartbeat = function(){
+		console.log('ping');
+		bullet.send('ping');
+	};
+	input.on('keyup',function (e) {
+	    if ((e.keyCode || e.charCode) === 13) {
+	    	bullet.send($('#nickname').val() + '&gt; '+input.val());
+	    	input.val('');
+	    }
+	});
+	function startloop() {
+		setTimeout(function(){
+			var sent = bullet.send($('#nickname').val() + ' has joined.');
+			console.log('start sent',sent);
+			// if ( ! ) startloop();
+		},500);
+	}
+	startloop();
+
+});
+
+function makeid(len) {
+	len = len || 5;
+    var text = [];
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for( var i=0; i < len; i++ )
+        text.push(possible.charAt(Math.floor(Math.random() * possible.length)));
+    return text.join('');
+}
+
+
+// ]]>
+</script>
+
+<style type="text/css">
+	#chat-box {
+		font-family: monospace;
+	}
+
+</style>

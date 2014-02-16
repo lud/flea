@@ -22,7 +22,7 @@ start() ->
 		  {listen, {0,0,0,0}},
 		  {appmods, [{"/flea", ?MODULE}]},
 		  {arg_rewrite_mod, yaws_vdir},
-		  {opaque,[{"vdir","/js/ "++PrivDir(flea)}]}
+		  {opaque,[{"vdir","/js/ "++ PrivDir(flea) }]}
 		],
 	GL =
 		[ {cache_refresh_secs,1},
