@@ -1,1 +1,1 @@
-erl -pa ebin -pa deps/flea/ebin -config priv/app.config -s chat
+erl -pa ebin -pa deps/*/ebin -config priv/app.config -s chat

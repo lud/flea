@@ -24,9 +24,9 @@ $(document).ready(function(){
 	var box = $('#chat-box'),
 		input = $('#send-msg'),
 		userid = makeid(10);
-	var eventsource_only = {'disableWebSocket': true,'disableXHRPolling': true}
-	var ws_only = {'disableXHRPolling': true,'disableEventSource': true}
-	var polling_only = {'disableWebSocket': true,'disableEventSource': true}
+	// var eventsource_only = {'disableWebSocket': true,'disableXHRPolling': true}
+	// var ws_only = {'disableXHRPolling': true,'disableEventSource': true}
+	// var polling_only = {'disableWebSocket': true,'disableEventSource': true}
 	var best_source = {};
 	bullet = $.bullet('ws://localhost:8000/flea/'+nickname+'/'+userid, best_source);
 	bullet.onopen = function(){
@@ -47,8 +47,8 @@ $(document).ready(function(){
 	};
 	input.on('keyup',function (e) {
 	    if ((e.keyCode || e.charCode) === 13) {
-	    	bullet.send(input.val());
-	    	input.val('');
+		bullet.send(input.val());
+		input.val('');
 	    }
 	});
 });

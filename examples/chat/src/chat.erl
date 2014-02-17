@@ -28,8 +28,9 @@ start() ->
 		[ {cache_refresh_secs,1},
 		  {logdir, "log"}
 		],
+	io:format("Bullet dir : ~p\n",[PrivDir(flea)]),
 	Docroot = PrivDir(?MODULE),
-	ok = application:ensure_started(gproc),
+	ok = application:start(gproc),
 	yaws:start_embedded(Docroot,SL,GL).
 
 broadcast(Nickname,Message) ->
@@ -164,7 +165,7 @@ info(Message,{NickName,Userid}=State)  ->
 	{ok,{NickName,Userid}}.
 
 stream(<<"ping">>, {NickName,Userid}=State) ->
-	io:format("Ping~n"),
+	io:format("Ping ~p~n",[NickName]),
 	keepalive(Userid),
 	{ok, State};
 
