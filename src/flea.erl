@@ -6,9 +6,6 @@
 -define(POLL_TIMEOUT, 30000).
 -define(WS_TIMEOUT, 60000).
 
--include_lib("yaws/include/yaws_api.hrl").
-
-
 %% todo gros refactoring à prévoir. Écrire les functions
 %% handler_init,handler_stream,handler_info,handler_terminate pour
 %% gérer de façon commune les appels au handler
