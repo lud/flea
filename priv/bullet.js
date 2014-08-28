@@ -32,11 +32,28 @@
 	onheartbeat is called once every few seconds to allow you to easily setup
 	a ping/pong mechanism.
 */
-(function($){$.extend({bullet: function(url, options){
+(function($,undefined){
+
+if (window.jQuery !== undefined) {
+	$.extend({bullet:bullet});
+} else {
+	window.$ = window.$ || {};
+	window.$.bullet = bullet;
+}
+
+function bullet (url, options){
 	var CONNECTING = 0;
 	var OPEN = 1;
 	var CLOSING = 2;
 	var CLOSED = 3;
+	var httpURL = url.replace('ws:', 'http:').replace('wss:', 'https:');
+	var options = options || {};
+
+	if (url == httpURL) {
+		options.disableWebSocket = true;
+	}
+
+	var ajax = typeof options.xhr === 'function' && options.xhr || $.ajax;
 
 	var xhrSend = function(data){
 		/**
@@ -47,23 +64,19 @@
 			return false;
 		}
 
-		var sendUrl = url.replace('ws:', 'http:').replace('wss:', 'https:');
 		var self = this;
-		$.ajax({
+		ajax(ajaxDefaults({
 			async: false,
-			cache: false,
 			type: 'POST',
-			url: sendUrl,
+			url: httpURL,
 			data: data,
-			dataType: 'text',
 			contentType: 'application/x-www-form-urlencoded; charset=utf-8',
-			headers: {'X-Socket-Transport': 'xhrPolling'},
 			success: function(data){
 				if (data && data.length !== 0){
 					self.onmessage({'data': data});
 				}
 			}
-		});
+		}));
 
 		return true;
 	};
@@ -106,8 +119,7 @@
 				return false;
 			}
 
-			var eventsourceURL = url.replace('ws:', 'http:').replace('wss:', 'https:');
-			var source = new window.EventSource(eventsourceURL);
+			var source = new window.EventSource(httpURL);
 
 			source.onopen = function () {
 				fake.readyState = OPEN;
@@ -165,23 +177,17 @@
 			};
 
 			function poll(){
-				var fakeurl = url.replace('ws:', 'http:').replace('wss:', 'https:');
-
-				xhr = $.ajax({
+				xhr = ajax(ajaxDefaults({
 					type: 'GET',
-					cache: false,
-					url: fakeurl,
-					dataType: 'text',
-					data: {},
-					headers: {'X-Socket-Transport': 'xhrPolling'},
-					success: function(data){
+					url: httpURL,
+					success: function(data) {
 						xhr = null;
 						if (fake.readyState == CONNECTING){
 							fake.readyState = OPEN;
 							fake.onopen(fake);
 						}
 						// Connection might have closed without a response body
-						if (data && data.length !== 0){
+						if (data && data.length !== 0) {
 							fake.onmessage({'data': data});
 						}
 						if (fake.readyState == OPEN){
@@ -192,7 +198,7 @@
 						xhr = null;
 						fake.onerror();
 					}
-				});
+				}));
 			}
 
 			function nextPoll(){
@@ -245,7 +251,7 @@
 				// Hard disconnect, inform the user and retry later
 				delay = delayDefault;
 				tn = 0;
-				stream.ondisconnect();
+				stream && stream.ondisconnect();
 				setTimeout(function(){init();}, delayMax);
 				return false;
 			}
@@ -328,4 +334,29 @@
 	};
 
 	return stream;
-}})})(jQuery);
+}
+
+function noop() {}
+
+function ajaxDefaults(o) {
+	var base = {
+		type: 'GET',
+		cache: false,
+		dataType: 'text',
+		data: "",
+		headers: {'X-Socket-Transport': 'xhrPolling'},
+		async: true,
+		success: noop,
+		error: noop
+	};
+
+	for (var k in o) if (o.hasOwnProperty(k)) {
+		base[k] = o[k];
+	}
+
+	base.method = o.type;
+
+	return base;
+}
+
+})(jQuery);
