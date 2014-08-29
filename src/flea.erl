@@ -101,7 +101,6 @@ poll(Arg,State=#state{handler_state=HSt,handler=Handler}) ->
 %% Websocket state initialisation
 init([Arg,Opts]) ->
 	Handler = lkup(handler,Opts),
-	{ok, HSt} =
 	{ok, HSt} = Handler:init(Arg,Opts,Active=true), %% @todo handle {error, Reason} | close / check if Yaws sends 500 errors
 	{ok,#state{handler=Handler,handler_state=HSt},?WS_TIMEOUT}.
 
