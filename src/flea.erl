@@ -4,7 +4,7 @@
 
 -define(Y,yaws_api).
 -define(POLL_TIMEOUT, 30000).
--define(WS_TIMEOUT, 60000).
+-define(WS_TIMEOUT, 60000). %%@todo unused
 
 %% todo gros refactoring à prévoir. Écrire les functions
 %% handler_init,handler_stream,handler_info,handler_terminate pour
@@ -98,11 +98,15 @@ poll(Arg,State=#state{handler_state=HSt,handler=Handler}) ->
 %%% Websockets
 %%% ------------------------------------------------------------------
 
-%% Websocket state initialisation
-init([Arg,Opts]) ->
+%% Websocket state initialisation. Here the socket is not yet opened
+%% so we just wait for it. (see https://github.com/klacke/yaws/issues/185)
+init([Arg,Opts]) -> {ok,{Arg,Opts}}.
+
+%% Here the handshake is done, we can initialize the handler
+handle_open(_,{Arg,Opts}) ->
 	Handler = lkup(handler,Opts),
 	{ok, HSt} = Handler:init(Arg,Opts,Active=true), %% @todo handle {error, Reason} | close / check if Yaws sends 500 errors
-	{ok,#state{handler=Handler,handler_state=HSt},?WS_TIMEOUT}.
+	{ok,#state{handler=Handler,handler_state=HSt}}.
 
 handle_message(Message) ->
 	%% State must be used
