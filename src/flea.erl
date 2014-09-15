@@ -1,6 +1,6 @@
 -module(flea).
 -export([out/2]).
--export([init/1,handle_message/1,handle_message/2,handle_info/2,terminate/2]).
+-export([init/1,handle_open/2,handle_message/2,handle_info/2,terminate/2]).
 
 -define(Y,yaws_api).
 -define(POLL_TIMEOUT, 30000).
@@ -73,7 +73,6 @@ handle_req(Arg,'POST',Opts) ->
 			of {reply,R,NewHSt}	-> {{html,R} ,NewHSt} %% todo check content, default to JSON
 			 ; {ok,NewHSt}     	-> {ok,NewHSt}
 		end,
-
 	Handler:terminate(NewHandlerState),
 	Reply.
 
@@ -88,10 +87,9 @@ poll(Arg,State=#state{handler_state=HSt,handler=Handler}) ->
 			 ; {ok,NewHSt} ->
 				poll(Arg,State=#state{handler_state=NewHSt,handler=Handler})
 		end
-	after
-		?POLL_TIMEOUT ->
-			Handler:terminate(HSt),
-			ok
+	after ?POLL_TIMEOUT ->
+		Handler:terminate(HSt),
+		ok
 	end.
 
 %%% ------------------------------------------------------------------
